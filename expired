@@ -1,0 +1,11 @@
+find /etc/pki -type f \( -name "*.crt" -o -name "*.pem" -o -name "*.cer" \) | while read cert; do
+  end_date=$(openssl x509 -in "$cert" -noout -enddate 2>/dev/null | cut -d= -f2)
+  if [ -n "$end_date" ]; then
+    # Convert expiration date to epoch
+    end_epoch=$(date -d "$end_date" +%s)
+    now_epoch=$(date +%s)
+    if [ "$end_epoch" -lt "$now_epoch" ]; then
+      echo "EXPIRED: $cert - Expired on: $end_date"
+    fi
+  fi
+done
