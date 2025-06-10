@@ -1,0 +1,66 @@
+#!/bin/bash
+
+echo -e "NODE\tCPU(Capacity)\tCPU(Allocatable)\tCPU(Requested)\tCPU(Used)\tMEM(Capacity)\tMEM(Allocatable)\tMEM(Requested)\tMEM(Used)"
+
+for node in $(oc get nodes -o name | awk -F'/' '{print $2}'); do
+  # Capacity & Allocatable
+  read cap_cpu alloc_cpu cap_mem alloc_mem <<< $(oc get node "$node" -o jsonpath='{.status.capacity.cpu} {.status.allocatable.cpu} {.status.capacity.memory} {.status.allocatable.memory}')
+
+  # Requested CPU/Memory
+  pod_resources=$(oc get pod -A --field-selector spec.nodeName="$node" -o json)
+  req_cpu_millicores=$(echo "$pod_resources" | jq '[.items[].spec.containers[].resources.requests.cpu // "0"] 
+    | map(if test("m$") then sub("m$"; "") | tonumber else . + "000" | tonumber end) 
+    | add')
+  req_mem_kib=$(echo "$pod_resources" | jq '[.items[].spec.containers[].resources.requests.memory // "0"] 
+    | map(
+        if test("Ki$") then sub("Ki$"; "") | tonumber
+        elif test("Mi$") then sub("Mi$"; "") | tonumber * 1024
+        elif test("Gi$") then sub("Gi$"; "") | tonumber * 1024 * 1024
+        else 0 end) 
+    | add')
+
+  # Convert memory to MiB
+  req_mem_mib=$((req_mem_kib / 1024))
+
+  # Actual usage from oc adm top
+  top_output=$(oc adm top node "$node" --no-headers)
+  used_cpu=$(echo "$top_output" | awk '{print $2}')
+  used_mem=$(echo "$top_output" | awk '{print $4}')
+
+  echo -e "$node\t$cap_cpu\t$alloc_cpu\t${req_cpu_millicores}m\t$used_cpu\t$cap_mem\t$alloc_mem\t${req_mem_mib}Mi\t$used_mem"
+done
+
+
+
+for node in $(oc get nodes -o name); do
+  echo "--- $node ---"
+  oc get pod -A --field-selector spec.nodeName=${node##*/} -o json | \
+    jq -r '
+      [.items[].spec.containers[].resources.requests] | 
+      map({
+        cpu: (.cpu // "0"),
+        memory: (.memory // "0")
+      }) | 
+      reduce .[] as $item (
+        {cpu: 0, memory: 0};
+        {
+          cpu: (.cpu + ($item.cpu | sub("m$"; "") | tonumber)),
+          memory: (.memory + ($item.memory | sub("Ki$"; "") | tonumber))
+        }
+      )'
+done
+
+
+oc get nodes -o custom-columns=NAME:.metadata.name,\
+CAP_CPU:.status.capacity.cpu,\
+ALLOC_CPU:.status.allocatable.cpu,\
+CAP_MEM:.status.capacity.memory,\
+ALLOC_MEM:.status.allocatable.memory
+
+
+
+oc get nodes -o custom-columns=NAME:.metadata.name,CPU:.status.allocatable.cpu,MEMORY:.status.allocatable.memory,PODS:.status.allocatable.pods
+
+oc get nodes -o jsonpath="{range .items[*]}{.metadata.name}{'\t'}CPU: {.status.allocatable.cpu}{'\t'}MEM: {.status.allocatable.memory}{'\n'}{end}"
+
+
