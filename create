@@ -15,3 +15,10 @@
   fail:
     msg: "Namespace {{ new_k8s_namespace }} already exists and override set to false! Failing playbook..."
   when: new_k8s_namespace in namespace_list and not override
+
+
+Namespace Exists	override	not override	Condition (A and B)	Fail Task Executes?
+No	false	true	false and true → false	❌ No
+Yes	false	true	true and true → true	✅ Yes
+Yes	true	false	true and false → false	❌ No
+No	true	false	false and false → false	❌ No
