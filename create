@@ -1,0 +1,17 @@
+- name: Check if namespace exists
+  k8s_info:
+    validate_certs: no
+    kind: Namespace
+  environment:
+    K8S_AUTH_HOST: "{{ env[env_item].host }}"
+    K8S_AUTH_CONTEXT: "{{ env[env_item].context }}"
+  register: check_namespace
+
+- name: Create list of namespaces
+  set_fact:
+    namespace_list: "{{ check_namespace | json_query('resources[*].metadata.name') }}"
+
+- name: Fail if namespace exists and override set to false
+  fail:
+    msg: "Namespace {{ new_k8s_namespace }} already exists and override set to false! Failing playbook..."
+  when: new_k8s_namespace in namespace_list and not override
