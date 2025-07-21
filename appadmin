@@ -1,0 +1,17 @@
+[appadmin@v00uamrigtio01r web]$ ls -la
+total 20
+dr-xr-x--- 3 appadmin users  120 Jul 21 14:26 .
+drwxr-x--- 6 appadmin users   67 Jul 21 11:59 ..
+dr-xr-x--- 2 appadmin users  115 Jul 21 13:54 cert
+-rwxr-x--- 1 appadmin users 1627 Jul 21 14:26 default.conf
+-rwxr-xr-x 1 appadmin users 1565 Jul 21 12:00 default.conf_bk
+-rw-r----- 1 appadmin users 3256 Jul 21 14:26 development.json
+-r--r----- 1 appadmin users  708 Jul 21 12:00 launch.sh
+-r--r----- 1 appadmin users  615 Jul 21 12:00 nginx.conf
+[appadmin@v00uamrigtio01r web]$ chmod 755 default.conf
+[appadmin@v00uamrigtio01r web]$ cp default.conf default.conf_test
+cp: cannot create regular file 'default.conf_test': Permission denied
+[appadmin@v00uamrigtio01r web]$ cp default.conf default.conf_test
+cp: cannot create regular file 'default.conf_test': Permission denied
+[appadmin@v00uamrigtio01r web]$ whoami
+appadmin
