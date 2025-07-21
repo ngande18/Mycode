@@ -18,3 +18,18 @@ appadmin
 
 
  failed (SSL: error:02001002:system library:fopen:No such file or directory:fopen('/data01/io/vol/web/cert/cert.pem','r') error:2006D080:BIO routines:BIO_new_file:no such file)
+
+[appadmin@v00uamrigtio01r cert]$ ls -ld /data01/
+drwxr-xr-x 5 appadmin users 56 Jul 21 11:42 /data01/
+[appadmin@v00uamrigtio01r cert]$ ls -ld /data01/io
+drwxr-x--- 8 appadmin users 4096 Jul 21 15:24 /data01/io
+[appadmin@v00uamrigtio01r cert]$ ls -ld /data01/io/vol/
+drwxr-x--- 6 appadmin users 67 Jul 21 11:59 /data01/io/vol/
+[appadmin@v00uamrigtio01r cert]$ ls -ld /data01/io/vol/web
+drwxr-x--- 3 appadmin users 120 Jul 21 15:24 /data01/io/vol/web
+[appadmin@v00uamrigtio01r cert]$ ls -ld /data01/io/vol/web/cert/
+dr-xr-x--- 2 appadmin users 115 Jul 21 13:54 /data01/io/vol/web/cert/
+[appadmin@v00uamrigtio01r cert]$ ls -la /data01/io/vol/web/cert/cert.pem
+-rwxr-xr-x 1 appadmin users 5512 Jul 21 13:43 /data01/io/vol/web/cert/cert.pem
+[appadmin@v00uamrigtio01r cert]$
+
