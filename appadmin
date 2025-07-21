@@ -15,3 +15,6 @@ cp: cannot create regular file 'default.conf_test': Permission denied
 cp: cannot create regular file 'default.conf_test': Permission denied
 [appadmin@v00uamrigtio01r web]$ whoami
 appadmin
+
+
+ failed (SSL: error:02001002:system library:fopen:No such file or directory:fopen('/data01/io/vol/web/cert/cert.pem','r') error:2006D080:BIO routines:BIO_new_file:no such file)
