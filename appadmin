@@ -33,3 +33,5 @@ dr-xr-x--- 2 appadmin users 115 Jul 21 13:54 /data01/io/vol/web/cert/
 -rwxr-xr-x 1 appadmin users 5512 Jul 21 13:43 /data01/io/vol/web/cert/cert.pem
 [appadmin@v00uamrigtio01r cert]$
 
+Enter PEM pass phrase:
+nginx: [emerg] SSL_CTX_use_PrivateKey_file("/etc/nginx/ssl/key.pem") failed (SSL: error:2807106B:UI routines:UI_process:processing error:while reading strings error:0906406D:PEM routines:PEM_def_callback:problems getting password error:0907B068:PEM routines:PEM_read_bio_PrivateKey:bad password read error:140B0009:SSL routines:SSL_CTX_use_PrivateKey_file:PEM lib)
