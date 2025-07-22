@@ -143,4 +143,80 @@
             echo "{{ running_containers.stdout }}" | xargs -r docker start
           when: running_containers.stdout != ""
 
+---
+- name: Docker CE install and configure with ulimit (no handlers)
+  hosts: localhost
+  become: true
+  vars:
+    docker_ulimit: 65536
+
+  tasks:
+    - name: Install Docker CE
+      package:
+        name: docker-ce
+        state: present
+
+    - name: Ensure Docker service is enabled and started
+      systemd:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: Show Docker version
+      command: docker --version
+      register: docker_version
+      changed_when: false
+
+    - name: Display Docker version output
+      debug:
+        var: docker_version.stdout
+
+    - name: Create systemd override directory for Docker
+      file:
+        path: /etc/systemd/system/docker.service.d
+        state: directory
+        mode: '0755'
+
+    - name: Create systemd override with custom ExecStart and ulimits
+      copy:
+        dest: /etc/systemd/system/docker.service.d/override.conf
+        content: |
+          [Service]
+          ExecStart=
+          ExecStart=/usr/bin/dockerd --default-ulimit nofile={{ docker_ulimit }}:{{ docker_ulimit }}
+          LimitNOFILE={{ docker_ulimit }}
+
+    - name: Stop all running Docker containers
+      shell: |
+        running_containers=$(docker ps -q)
+        if [ -n "$running_containers" ]; then
+          echo "$running_containers" | xargs -r docker stop
+        fi
+      ignore_errors: true
+
+    - name: Reload systemd daemon and restart Docker service
+      shell: |
+        systemctl daemon-reexec
+        systemctl daemon-reload
+        systemctl restart docker
+
+    - name: Start previously running containers
+      shell: |
+        running_containers=$(docker ps -a -f "status=exited" -q)
+        if [ -n "$running_containers" ]; then
+          echo "$running_containers" | xargs -r docker start
+        fi
+      ignore_errors: true
+
+    - name: Set soft nofile limits in /etc/security/limits.conf
+      lineinfile:
+        path: /etc/security/limits.conf
+        line: "* soft nofile {{ docker_ulimit }}"
+        state: present
+
+    - name: Set hard nofile limits in /etc/security/limits.conf
+      lineinfile:
+        path: /etc/security/limits.conf
+        line: "* hard nofile {{ docker_ulimit }}"
+        state: present
 
