@@ -1,0 +1,64 @@
+---
+- name: Ensure Docker is installed and configured with custom ulimits
+  hosts: localhost
+  become: true
+  tasks:
+
+    - name: Install Docker using official repo
+      package:
+        name: docker
+        state: present
+
+    - name: Ensure Docker service is enabled and started
+      systemd:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: Show Docker version
+      command: docker --version
+      register: docker_version_output
+      changed_when: false
+
+    - name: Display Docker version
+      debug:
+        var: docker_version_output.stdout
+
+    - name: Create Docker systemd override directory
+      file:
+        path: /etc/systemd/system/docker.service.d
+        state: directory
+        mode: 0755
+
+    - name: Create systemd override with custom ulimits
+      copy:
+        dest: /etc/systemd/system/docker.service.d/override.conf
+        content: |
+          [Service]
+          ExecStart=
+          ExecStart=/usr/bin/dockerd --default-ulimit nofile=65536:65536
+          LimitNOFILE=65536
+      notify: Reload Docker daemon
+
+    - name: Set soft and hard nofile limits in limits.conf
+      lineinfile:
+        path: /etc/security/limits.conf
+        line: "{{ item }}"
+        state: present
+      loop:
+        - '* soft nofile 65536'
+        - '* hard nofile 65536'
+
+    - name: Ensure pam_limits is enabled (for Debian/Ubuntu)
+      lineinfile:
+        path: /etc/pam.d/common-session
+        line: "session required pam_limits.so"
+        state: present
+      when: ansible_facts['os_family'] == "Debian"
+
+  handlers:
+    - name: Reload Docker daemon
+      systemd:
+        daemon_reload: true
+        name: docker
+        state: restarted
