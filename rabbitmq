@@ -23,3 +23,6 @@
       options:
         max-size: "20m"
         max-file: "10"
+RABBITMQ_SERVER=10.254.137.93
+RABBITMQ_USER=guest
+RABBITMQ_PASSWORD="guest"
