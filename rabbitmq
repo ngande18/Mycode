@@ -1,0 +1,25 @@
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3.9.7-management
+    mem_limit: 2048m
+    restart: unless-stopped
+    ports:
+      - 25672:25672
+      - 15672:15672
+      - 15671:15671
+      - 5672:5672
+      - 5671:5671
+      - 4369:4369
+    environment:
+      SERVICE_25672_NAME: rabbitmq
+      SERVICE_TAGS: rabbitmq
+      RABBITMQ_NODENAME: io-rabbitmq
+    volumes:
+      - ./vol/rabbitmq/log:/var/log/rabbitmq
+      - ./vol/rabbitmq/data:/var/lib/rabbitmq/mnesia
+    networks:
+      - io_network
+    logging:
+      options:
+        max-size: "20m"
+        max-file: "10"
