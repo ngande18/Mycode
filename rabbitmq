@@ -48,3 +48,67 @@ RABBITMQ_PASSWORD="guest"
         max-size: "20m"
         max-file: "10"
 
+docker exec -it rabbitmq bash
+rabbitmqctl list_users
+
+
+#!/bin/bash
+# Wait for RabbitMQ to fully start before running commands
+# Optionally, you can use a script like wait-for-it.sh for more robust waiting
+
+# Define user credentials from environment variables or defaults
+NEW_USER=${RABBITMQ_NEW_USER:-itsupport}  # Default to 'itsupport' if not set
+NEW_PASS=${RABBITMQ_NEW_PASS:-testing123}  # Default to 'testing123' if not set
+
+# Check if the user already exists to avoid re-creating on every restart
+rabbitmqctl add_user $NEW_USER $NEW_PASS || echo "User $NEW_USER already exists"
+
+# Set permissions for the new user
+rabbitmqctl set_permissions -p / $NEW_USER ".*" ".*" ".*"
+
+# Optionally, add new user to the administrator group
+rabbitmqctl set_user_tags $NEW_USER administrator
+
+
+version: '3.8'
+
+services:
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3.9.7-management
+    mem_limit: 2048m
+    restart: unless-stopped
+    ports:
+      - 25672:25672
+      - 15672:15672
+      - 15671:15671
+      - 5672:5672
+      - 5671:5671
+      - 4369:4369
+    environment:
+      SERVICE_25672_NAME: rabbitmq
+      SERVICE_TAGS: rabbitmq
+      RABBITMQ_NODENAME: io-rabbitmq
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}  # Default to guest
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}  # Default password
+      RABBITMQ_DEFAULT_VHOST: /  # Default vhost
+    volumes:
+      - ./vol/rabbitmq/log:/var/log/rabbitmq
+      - ./vol/rabbitmq/data:/var/lib/rabbitmq/mnesia  # Persistent data
+      - ./rabbitmq-setup.sh:/docker-entrypoint-initdb.d/rabbitmq-setup.sh  # Mount the init script
+    networks:
+      - io_network
+    logging:
+      options:
+        max-size: "20m"
+        max-file: "10"
+
+networks:
+  io_network:
+    driver: bridge
+
+RABBITMQ_USER=guest
+RABBITMQ_PASSWORD="guest"
+RABBITMQ_NEW_USER=itsupport  # New user
+RABBITMQ_NEW_PASS="testing123"  # New user's password
+
